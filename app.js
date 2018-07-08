@@ -23,7 +23,9 @@ var budgetControl=(function(){
 		totals:{
 			exp:0,
 			inc:0
-		}
+		},
+		budget:0,
+		percentage:-1
 	};
 	return{
 		addItem: function(type,des,val){
@@ -31,15 +33,30 @@ var budgetControl=(function(){
 			if(type==='income'){
 				newItem=new Income(data.allItems.inc.length,des,val);
 				data.allItems.inc.push(newItem);
+				data.totals.inc+=val;
 			}
 			else{
 				newItem=new Expense(data.allItems.exp.length,des,val)
 				data.allItems.exp.push(newItem);
+				data.totals.exp+=val;
+
 			}
+			data.budget=data.totals.inc-data.totals.exp;
+			if(data.totals.inc>0){
+			data.percentage=Math.round((data.totals.exp/data.totals.inc)*100);
+			}	
 			return newItem;
 		},
-		calcuateBudget:function(){
-			var expense=data.totals.exp;
+		getTotals: function(){
+			return {
+				expense:data.totals.exp,
+				income:data.totals.inc,
+				budget:data.budget,
+				percentage:data.percentage
+			}
+		},
+		removeItem:function(arr,id){
+
 		}
 	}
 
@@ -48,6 +65,7 @@ var budgetControl=(function(){
 // -----------------------------------------------
 //This is the User interface module
 // -----------------------------------------------
+
 var UIController=(function(){
 	return{
 		getInput:function(){
@@ -60,6 +78,7 @@ var UIController=(function(){
 		addListItem:function(obj,type){
 			var item_div=document.createElement("DIV");
 			item_div.className+="item clearfix"; 
+
 
 			var description=document.createElement("DIV");
 			description.className+="item__description"; 
@@ -93,9 +112,13 @@ var UIController=(function(){
 			item_div.appendChild(clearfix);
 			if(type=='expense'){
 				document.querySelector('.expenses__list').appendChild(item_div);
+				item_div.setAttribute('id','exp-'+obj.id);
+
 			}
 			else{
 				document.querySelector('.income__list').appendChild(item_div);
+				item_div.setAttribute('id','inc-'+obj.id);
+
 			}
 		},
 		clearInput: function(){
@@ -105,9 +128,11 @@ var UIController=(function(){
 			document.querySelector('.add__description').focus();
 
 		},
-		updateBudget: function(income,expense){
-			document.querySelector('.budget__income--value')=income;
-			document.querySelector('.budget__expenses--value')=expense;
+		updateBudget: function(income,expense,budget,percentage){
+			document.querySelector('.budget__income--value').textContent=income;
+			document.querySelector('.budget__expenses--value').textContent=expense;
+			document.querySelector('.budget__value').textContent=budget;
+			document.querySelector('.budget__expenses--percentage').textContent=percentage+"%";
 		}
 	};	
 })();
@@ -115,16 +140,32 @@ var UIController=(function(){
 // -----------------------------------------------
 //This is the global controll module
 // -----------------------------------------------
+
 var controller=(function(bdgcnrl,uicntrl){
-	function cntrlAddItem(){
-	
+	uicntrl.updateBudget(0,0,0,0);
+
+	function cntrlAddItem(){	
 		var input=uicntrl.getInput();
 		if(input.description && input.value!=NaN && input.value>0){
 			var newItem=budgetControl.addItem(input.type,input.description,input.value);
 			uicntrl.addListItem(newItem,input.type);
-			uicntrl.updateBudget();
+			var data=bdgcnrl.getTotals();
+			uicntrl.updateBudget(data.income,data.expense,data.budget,data.percentage);
 		}
 		uicntrl.clearInput();
+	}
+
+	function cntrlDeleteItem(event){
+		var toRemove=event.target.parentNode.parentNode.parentNode.parentNode.id;
+
+		if(toRemove){
+			toRemove=toRemove.split('-');
+			console.log(toRemove);
+
+			//Delete from data
+			//Remove from UI
+			//update the budget
+		}
 	}
 	document.querySelector('.add__btn').addEventListener('click',cntrlAddItem);
 
@@ -134,6 +175,8 @@ var controller=(function(bdgcnrl,uicntrl){
     		cntrlAddItem();
    		}	
 	});
+
+	document.querySelector('.container').addEventListener('click',cntrlDeleteItem);
 
 
 })(budgetControl,UIController);
