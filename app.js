@@ -56,7 +56,14 @@ var budgetControl=(function(){
 			}
 		},
 		removeItem:function(arr,id){
-
+			var ids = data.allItems[arr].map(function(element){
+				return element.id;
+			});
+			var index=ids.indexOf(Number(id));
+			if(index!==-1){
+				data.allItems[arr].splice(index,1);
+				// data.totals[arr]-=
+			}
 		}
 	}
 
@@ -133,6 +140,29 @@ var UIController=(function(){
 			document.querySelector('.budget__expenses--value').textContent=expense;
 			document.querySelector('.budget__value').textContent=budget;
 			document.querySelector('.budget__expenses--percentage').textContent=percentage+"%";
+		},
+		removeElement:function(id){
+    		var elem = document.getElementById(id);
+    		elem.parentNode.removeChild(elem);
+		},
+		updateMonth:function(){
+			var d = new Date();
+			var month = new Array();
+			month[0] = "January";
+			month[1] = "February";
+			month[2] = "March";
+			month[3] = "April";
+			month[4] = "May";
+			month[5] = "June";
+			month[6] = "July";
+			month[7] = "August";
+			month[8] = "September";
+			month[9] = "October";
+			month[10] = "November";
+			month[11] = "December";
+			var n = month[d.getMonth()];
+			document.querySelector('.budget__title--month').textContent=document.querySelector('.budget__title--month').textContent.replace('%Month%',n);
+
 		}
 	};	
 })();
@@ -143,7 +173,7 @@ var UIController=(function(){
 
 var controller=(function(bdgcnrl,uicntrl){
 	uicntrl.updateBudget(0,0,0,0);
-
+	uicntrl.updateMonth();
 	function cntrlAddItem(){	
 		var input=uicntrl.getInput();
 		if(input.description && input.value!=NaN && input.value>0){
@@ -159,11 +189,10 @@ var controller=(function(bdgcnrl,uicntrl){
 		var toRemove=event.target.parentNode.parentNode.parentNode.parentNode.id;
 
 		if(toRemove){
-			toRemove=toRemove.split('-');
-			console.log(toRemove);
-
-			//Delete from data
+			var item=toRemove.split('-');
+			bdgcnrl.removeItem(item[0],item[1]);
 			//Remove from UI
+			uicntrl.removeElement(toRemove);
 			//update the budget
 		}
 	}
